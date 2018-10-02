@@ -16,7 +16,7 @@ public section.
       end of ts_criteria .
   types:
     begin of ts_address.
-            include type bapibus1006_addresses.
+        include type bapibus1006_addresses.
     types:
       address type bapibus1006_address,
       tels    type bapiadtel_t,
@@ -431,7 +431,7 @@ public section.
       value(E_WAS) type ABAP_BOOL
     raising
       ZCX_GENERIC .
-  class-methods GET_PARTNER_FROM_UNAME
+  class-methods GET_PARTNER_BY_USER
     importing
       !I_USER type SY-UNAME default SY-UNAME
     returning
@@ -524,10 +524,10 @@ public section.
       !I_COMMIT type ABAP_BOOL default ABAP_FALSE
     raising
       ZCX_GENERIC .
-protected section.
+  protected section.
 *"* protected components of class ZCL_PARTNER_STATIC
 *"* do not include other source files here!!!
-private section.
+  private section.
 *"* private components of class ZCL_PARTNER_STATIC
 *"* do not include other source files here!!!
 ENDCLASS.
@@ -537,60 +537,60 @@ ENDCLASS.
 CLASS ZCL_PARTNER_STATIC IMPLEMENTATION.
 
 
-method add_roles.
+  method add_roles.
 
-  if i_rfc eq abap_true.
+    if i_rfc eq abap_true.
 
-    data lt_messages type zimessages.
-    call function 'Z_SRM_PARTNER_ROLES_ADD' destination dest
-      exporting
-        i_partner   = i_partner
-        it_roles    = it_roles
-      importing
-        et_messages = lt_messages.
-
-    loop at lt_messages transporting no fields
-      where msgty eq 'EAX'.
-      zcx_generic=>raise( it_messages = lt_messages ).
-    endloop.
-
-  else.
-
-    data i_role like line of it_roles.
-    loop at it_roles into i_role.
-
-      data l_role type bu_partnerrole.
-      l_role = i_role.
-
-      data lt_return type bapiret2_t.
-      call function 'BAPI_BUPA_ROLE_ADD_2'
+      data lt_messages type zimessages.
+      call function 'Z_SRM_PARTNER_ROLES_ADD' destination dest
         exporting
-          businesspartner     = i_partner
-          businesspartnerrole = l_role
-        tables
-          return              = lt_return.
-      loop at lt_return transporting no fields where type ca 'EAX'.
+          i_partner   = i_partner
+          it_roles    = it_roles
+        importing
+          et_messages = lt_messages.
 
-        if i_commit eq abap_true.
-          zcl_abap_static=>rollback( ).
-        endif.
+      loop at lt_messages transporting no fields
+        where msgty eq 'EAX'.
+        zcx_generic=>raise( it_messages = lt_messages ).
+      endloop.
 
-        zcx_generic=>raise( it_return = lt_return ).
+    else.
+
+      data i_role like line of it_roles.
+      loop at it_roles into i_role.
+
+        data l_role type bu_partnerrole.
+        l_role = i_role.
+
+        data lt_return type bapiret2_t.
+        call function 'BAPI_BUPA_ROLE_ADD_2'
+          exporting
+            businesspartner     = i_partner
+            businesspartnerrole = l_role
+          tables
+            return              = lt_return.
+        loop at lt_return transporting no fields where type ca 'EAX'.
+
+          if i_commit eq abap_true.
+            zcl_abap_static=>rollback( ).
+          endif.
+
+          zcx_generic=>raise( it_return = lt_return ).
+
+        endloop.
 
       endloop.
 
-    endloop.
+      if i_commit eq abap_true.
+        zcl_abap_static=>commit( ).
+      endif.
 
-    if i_commit eq abap_true.
-      zcl_abap_static=>commit( ).
     endif.
 
-  endif.
-
-endmethod.
+  endmethod.
 
 
-method change_org.
+  method change_org.
 
     if i_rfc eq abap_false.
 
@@ -1298,7 +1298,7 @@ method change_org.
   endmethod.
 
 
-method create_contact.
+  method create_contact.
 
     data lt_roles type stringtab.
     data l_role like line of lt_roles.
@@ -1333,7 +1333,7 @@ method create_contact.
   endmethod.
 
 
-method create_org.
+  method create_org.
 
     if i_rfc eq abap_false.
 
@@ -1832,7 +1832,7 @@ method create_org.
   endmethod.
 
 
-method create_person.
+  method create_person.
 
     if i_rfc eq abap_false.
 
@@ -1994,7 +1994,7 @@ method create_person.
   endmethod.
 
 
-method get_addresses.
+  method get_addresses.
 
     if is_exist( i_partner ) eq abap_false.
       return.
@@ -2080,7 +2080,7 @@ method get_addresses.
   endmethod.
 
 
-method get_address_text.
+  method get_address_text.
 
     if is_exist( i_partner ) eq abap_false.
       return.
@@ -2108,12 +2108,15 @@ method get_address_text.
 
     data ls_address like line of lt_addresses.
     read table lt_addresses into ls_address
-      with key usage-addresstype          = i_kind
-               usage-standardaddressusage = abap_true.
+      with key
+        usage-addresstype          = i_kind
+        usage-standardaddressusage = abap_true.
     if sy-subrc ne 0.
       read table lt_addresses into ls_address
-        with key usage-addresstype = i_kind.
+        with key
+          usage-addresstype = i_kind.
     endif.
+
     if sy-subrc eq 0.
 
       " Èíäåêñ
@@ -2210,7 +2213,7 @@ method get_address_text.
   endmethod.
 
 
-method get_bidder.
+  method get_bidder.
 
     try.
         zcl_cache_static=>get_data(
@@ -2269,7 +2272,7 @@ method get_bidder.
   endmethod.
 
 
-method get_children.
+  method get_children.
 
     data lt_type type zirange.
     lt_type = zcl_abap_static=>value2range( i_type ).
@@ -2294,7 +2297,7 @@ method get_children.
   endmethod.
 
 
-method get_contacts.
+  method get_contacts.
 
     data lt_roles type stringtab.
     data l_role like line of lt_roles.
@@ -2318,7 +2321,7 @@ method get_contacts.
   endmethod.
 
 
-method get_contact_text.
+  method get_contact_text.
 
     data lt_addr type tt_addresses.
     get_addresses(
@@ -2352,7 +2355,7 @@ method get_contact_text.
   endmethod.
 
 
-method get_email.
+  method get_email.
 
     data l_partner type bu_partner.
     l_partner = i_partner.
@@ -2378,7 +2381,7 @@ method get_email.
   endmethod.
 
 
-method get_guid.
+  method get_guid.
 
     if is_exist( i_partner ) eq abap_false.
       return.
@@ -2410,7 +2413,7 @@ method get_guid.
   endmethod.
 
 
-method get_id.
+  method get_id.
 
     data l_id type string.
     concatenate i_partner '/' i_id into l_id.
@@ -2445,7 +2448,7 @@ method get_id.
   endmethod.
 
 
-method get_ids.
+  method get_ids.
 
     data l_partner type bu_partner.
     l_partner = i_partner.
@@ -2459,7 +2462,7 @@ method get_ids.
   endmethod.
 
 
-method get_inn.
+  method get_inn.
 
     e_inn =
       get_tax(
@@ -2469,7 +2472,7 @@ method get_inn.
   endmethod.
 
 
-method get_kind.
+  method get_kind.
 
     if is_exist( i_partner ) eq abap_false.
       return.
@@ -2496,7 +2499,7 @@ method get_kind.
   endmethod.
 
 
-method get_kpp.
+  method get_kpp.
 
     e_kpp =
       get_tax(
@@ -2506,7 +2509,7 @@ method get_kpp.
   endmethod.
 
 
-method get_legal_form.
+  method get_legal_form.
 
     if is_exist( i_partner ) eq abap_false.
       return.
@@ -2532,7 +2535,7 @@ method get_legal_form.
   endmethod.
 
 
-method get_name.
+  method get_name.
 
     if is_exist( i_partner ) eq abap_false.
       return.
@@ -2579,7 +2582,7 @@ method get_name.
   endmethod.
 
 
-method get_ogrn.
+  method get_ogrn.
 
     e_ogrn =
       get_tax(
@@ -2589,7 +2592,7 @@ method get_ogrn.
   endmethod.
 
 
-method get_okpo.
+  method get_okpo.
 
     e_okpo =
       get_tax(
@@ -2599,7 +2602,7 @@ method get_okpo.
   endmethod.
 
 
-method get_okved.
+  method get_okved.
 
     e_okved =
       get_tax(
@@ -2609,7 +2612,7 @@ method get_okved.
   endmethod.
 
 
-method get_org.
+  method get_org.
 
     data l_org type bu_partner.
     l_org = i_org.
@@ -2741,7 +2744,7 @@ method get_org.
   endmethod.
 
 
-method get_parents.
+  method get_parents.
 
     data lt_type type zirange.
     lt_type = zcl_abap_static=>value2range( i_type ).
@@ -2766,7 +2769,7 @@ method get_parents.
   endmethod.
 
 
-method get_partner_from_uname.
+  method GET_PARTNER_BY_USER.
 
     call function 'BP_CENTRALPERSON_GET'
       exporting
@@ -2782,7 +2785,7 @@ method get_partner_from_uname.
   endmethod.
 
 
-method get_persons.
+  method get_persons.
 
     data lt_roles type zirange.
     lt_roles = zcl_abap_static=>list2range( it_roles ).
@@ -2829,7 +2832,7 @@ method get_persons.
   endmethod.
 
 
-method get_phone.
+  method get_phone.
 
     data l_partner type bu_partner.
     l_partner = i_partner.
@@ -2855,7 +2858,7 @@ method get_phone.
   endmethod.
 
 
-method get_relations.
+  method get_relations.
 
     if is_exist( i_partner ) eq abap_false.
       return.
@@ -2971,7 +2974,7 @@ method get_relations.
   endmethod.
 
 
-method get_relkind_text.
+  method get_relkind_text.
 
     if i_kind is initial.
       return.
@@ -3002,7 +3005,7 @@ method get_relkind_text.
   endmethod.
 
 
-method get_reltype_text.
+  method get_reltype_text.
 
     if i_type is initial.
       return.
@@ -3042,7 +3045,7 @@ method get_reltype_text.
   endmethod.
 
 
-method get_roles.
+  method get_roles.
 
     data lt_return type bapiret2_t.
     call function 'BAPI_BUPA_ROLES_GET_2'
@@ -3060,7 +3063,7 @@ method get_roles.
   endmethod.
 
 
-method get_status.
+  method get_status.
 
     if is_exist( i_partner ) eq abap_false.
       return.
@@ -3078,7 +3081,7 @@ method get_status.
   endmethod.
 
 
-method get_status_text.
+  method get_status_text.
 
     data l_id type string.
     concatenate i_scheme '/' i_status into l_id.
@@ -3105,7 +3108,7 @@ method get_status_text.
   endmethod.
 
 
-method get_swifts.
+  method get_swifts.
 
     if is_exist( i_partner ) eq abap_false.
       zcx_generic=>raise( ).
@@ -3157,7 +3160,7 @@ method get_swifts.
   endmethod.
 
 
-method get_tax.
+  method get_tax.
 
     data l_id type string.
     concatenate i_partner '/' i_tax into l_id.
@@ -3189,7 +3192,7 @@ method get_tax.
   endmethod.
 
 
-method get_taxes.
+  method get_taxes.
 
     data lt_return type bapiret2_t.
     call function 'BAPI_BUPA_TAX_GETDETAILS'
@@ -3209,7 +3212,7 @@ method get_taxes.
   endmethod.
 
 
-method get_type.
+  method get_type.
 
     if is_exist( i_partner ) eq abap_false.
       return.
@@ -3224,7 +3227,9 @@ method get_type.
       catch cx_root.
     endtry.
 
-    select single type from but000 into e_type
+    select single type
+      from but000
+      into e_type
       where partner = i_partner.
 
     zcl_cache_static=>set_data(
@@ -3235,7 +3240,7 @@ method get_type.
   endmethod.
 
 
-method get_user.
+  method get_user.
 
     try.
         zcl_cache_static=>get_data(
@@ -3273,7 +3278,7 @@ method get_user.
   endmethod.
 
 
-method get_users.
+  method get_users.
 
     " Get relations
     data lt_relations type table of bapibus1006_relations.
@@ -3312,7 +3317,7 @@ method get_users.
   endmethod.
 
 
-method is_exist.
+  method is_exist.
 
     if i_partner is initial.
       return.
@@ -3352,7 +3357,7 @@ method is_exist.
   endmethod.
 
 
-method is_org.
+  method is_org.
 
     if is_exist( i_partner ) eq abap_false.
       return.
@@ -3383,7 +3388,7 @@ method is_org.
   endmethod.
 
 
-method read_text.
+  method read_text.
 
     data l_id type string.
     concatenate i_partner '/' i_id '/' i_language into l_id.
@@ -3415,7 +3420,7 @@ method read_text.
   endmethod.
 
 
-method save_text.
+  method save_text.
 
     data l_name type thead-tdname.
     l_name = i_partner.
@@ -3431,7 +3436,7 @@ method save_text.
   endmethod.
 
 
-method search.
+  method search.
 
     if is_criteria-inn is not initial.
 
@@ -3501,7 +3506,7 @@ method search.
   endmethod.
 
 
-method set_id.
+  method set_id.
 
     data lt_ids type bapibus1006_id_details_t.
     field-symbols <ls_id> like line of lt_ids.
@@ -3569,96 +3574,96 @@ method set_id.
   endmethod.
 
 
-method update_relations.
+  method update_relations.
 
-  data l_partner type bu_partner.
-  l_partner = i_partner.
+    data l_partner type bu_partner.
+    l_partner = i_partner.
 
-  data l_type type bu_reltyp.
-  l_type = i_type.
+    data l_type type bu_reltyp.
+    l_type = i_type.
 
-  data lt_type type zirange.
-  lt_type = zcl_abap_static=>value2range( i_type ).
+    data lt_type type zirange.
+    lt_type = zcl_abap_static=>value2range( i_type ).
 
-  data lt_relations type tt_relations.
-  get_relations(
-    exporting
-      i_partner    = i_partner
-      it_type      = lt_type
-      i_single     = abap_true
-    importing
-      et_relations = lt_relations ).
+    data lt_relations type tt_relations.
+    get_relations(
+      exporting
+        i_partner    = i_partner
+        it_type      = lt_type
+        i_single     = abap_true
+      importing
+        et_relations = lt_relations ).
 
-  try.
+    try.
 
-      " Óäàåëåíèå ïðîòóõøèõ
-      data ls_relation like line of lt_relations.
-      loop at lt_relations into ls_relation.
+        " Óäàåëåíèå ïðîòóõøèõ
+        data ls_relation like line of lt_relations.
+        loop at lt_relations into ls_relation.
 
-        read table it_partners transporting no fields
-          with key table_line = ls_relation-partner.
-        check sy-subrc ne 0.
+          read table it_partners transporting no fields
+            with key table_line = ls_relation-partner.
+          check sy-subrc ne 0.
 
-        data lt_return type bapiret2_t.
-        clear lt_return.
-        call function 'BAPI_BUPR_RELATIONSHIP_DELETE'
-          exporting
-            businesspartner1     = l_partner
-            businesspartner2     = ls_relation-partner
-            relationshipcategory = l_type
-          tables
-            return               = lt_return.
+          data lt_return type bapiret2_t.
+          clear lt_return.
+          call function 'BAPI_BUPR_RELATIONSHIP_DELETE'
+            exporting
+              businesspartner1     = l_partner
+              businesspartner2     = ls_relation-partner
+              relationshipcategory = l_type
+            tables
+              return               = lt_return.
 
-        loop at lt_return transporting no fields
-          where type ca 'EAX'.
-          zcx_generic=>raise( it_return = lt_return ).
+          loop at lt_return transporting no fields
+            where type ca 'EAX'.
+            zcx_generic=>raise( it_return = lt_return ).
+          endloop.
+
         endloop.
 
-      endloop.
+        " Äîáàâëåíèå íîâûõ ñâÿçåé
+        data l_partner2 like line of it_partners.
+        loop at it_partners into l_partner2.
 
-      " Äîáàâëåíèå íîâûõ ñâÿçåé
-      data l_partner2 like line of it_partners.
-      loop at it_partners into l_partner2.
+          read table lt_relations transporting no fields
+            with key table_line = l_partner2.
+          check sy-subrc ne 0.
 
-        read table lt_relations transporting no fields
-          with key table_line = l_partner2.
-        check sy-subrc ne 0.
+          clear lt_return.
+          call function 'BAPI_BUPR_RELATIONSHIP_CREATE'
+            exporting
+              businesspartner1     = l_partner
+              businesspartner2     = l_partner2
+              relationshipcategory = l_type
+            tables
+              return               = lt_return.
 
-        clear lt_return.
-        call function 'BAPI_BUPR_RELATIONSHIP_CREATE'
-          exporting
-            businesspartner1     = l_partner
-            businesspartner2     = l_partner2
-            relationshipcategory = l_type
-          tables
-            return               = lt_return.
+          loop at lt_return transporting no fields
+            where type ca 'EAX'.
+            zcx_generic=>raise( it_return = lt_return ).
+          endloop.
 
-        loop at lt_return transporting no fields
-          where type ca 'EAX'.
-          zcx_generic=>raise( it_return = lt_return ).
         endloop.
 
-      endloop.
+        data lx_fail type ref to zcx_generic.
+      catch zcx_generic into lx_fail.
 
-      data lx_fail type ref to zcx_generic.
-    catch zcx_generic into lx_fail.
+        if i_commit eq abap_true.
+          zcl_abap_static=>rollback( ).
+        endif.
 
-      if i_commit eq abap_true.
-        zcl_abap_static=>rollback( ).
-      endif.
+        raise exception lx_fail.
 
-      raise exception lx_fail.
+    endtry.
 
-  endtry.
+    if i_commit eq abap_true.
+      zcl_abap_static=>commit( ).
+    endif.
 
-  if i_commit eq abap_true.
-    zcl_abap_static=>commit( ).
-  endif.
-
-endmethod.
+  endmethod.
 
 
-method was_blocked.
+  method was_blocked.
 
     if is_exist( i_partner ) eq abap_false.
       zcx_generic=>raise( ).
@@ -3676,7 +3681,9 @@ method was_blocked.
       catch cx_root.
     endtry.
 
-    select single xblck from but000 into e_blocked
+    select single xblck
+      from but000
+      into e_blocked
       where partner eq l_partner.
 
     zcl_cache_static=>set_data(
@@ -3687,7 +3694,7 @@ method was_blocked.
   endmethod.
 
 
-method was_deleted.
+  method was_deleted.
 
     if is_exist( i_partner ) eq abap_false.
       zcx_generic=>raise( ).
@@ -3702,7 +3709,9 @@ method was_deleted.
       catch cx_root.
     endtry.
 
-    select single xdele into e_was from but000
+    select single xdele
+      from but000
+      into e_was
       where partner eq i_partner.
 
     zcl_cache_static=>set_data(
